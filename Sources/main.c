@@ -5,44 +5,36 @@ E-mail: 2008f.d@163.com
 淘宝店：http://fxfreefly.taobao.com
 ************************************************************/
 /*---------------------------------------------------------*/
-#include <hidef.h>      /* common defines and macros */
+#include <hidef.h>           /* common defines and macros */
 #include "derivative.h"      /* derivative-specific definitions */
 #include "stdio.h"
 
 #include "string.h"
 #include <stdlib.h>
 #include <stdarg.h>
+                         
 
-
-
-
-
-                  
-
-
-                             
-          
-
-
-
-#define LEDCPU PORTK_PK4
-#define LEDCPU_dir DDRK_DDRK4
-#define LED_ON 0
-#define LED_OFF 1
+#define LEDCPU        PORTK_PK4
+#define LEDCPU_dir    DDRK_DDRK4
+#define LED_ON    0
+#define LED_OFF   1
 #define BUS_CLOCK		   32000000	   //总线频率
 #define OSC_CLOCK		   16000000	   //晶振频率
-
-
-#define LED PORTB
-#define LED_dir DDRB
-
-unsigned char data=0x01;
-
-
-void Ser_Printf (const char *format, ...);
+#define LED       PORTB
+#define LED_dir   DDRB
 
 
 extern void INIT_SCI(void);
+extern void Ser_Printf (const char *format, ...);
+
+
+#define TEST_I2C   1
+#undef TEST_I2C 
+#define TEST_SPI   1
+#undef TEST_SPI 
+
+#define TEST_DFLASH   1
+#undef TEST_DFLASH 
 
 
 
@@ -62,11 +54,7 @@ void delay_i2c(void)
 
 
                         
-unsigned char putstring[]="hello freescale mcu\n";
-unsigned char *send;
 
-
-static unsigned char uart_send_a_char(unsigned char ch);
 
 /*************************************************************/
 /*                      初始化锁相环                         */
@@ -99,17 +87,45 @@ void INIT_PLL(void)
 
                          
 
-unsigned char receivedata = 0;
 
-//#pragma  CODE_SEGFLASH_RAM    //?.prm????FLASH_RAM???RAM??
-// ?flash???????
-#pragma CODE_SEG  MYTEST
 
-                        
+//#pragma CODE_SEG  MYTEST
+
+unsigned int CData = 0x55; 
+int sum;
 int test_func(int a, int b)
 {
-	int c;  
+	int c=0;  
 	__asm nop;
+
+	switch(a){
+      case 0x00:
+      break;
+	  case 0x01:
+	  	Ser_Printf( "CData = 1\n");
+      break;
+	  case 11:
+	  	Ser_Printf( "CData = 11\n");
+      break;
+	  
+	  default:
+      break;
+
+	}
+
+	
+	do{  
+        c++;
+	    sum = sum+c;
+	}while(c<=100);
+	//__asm BRCLR  0xcc,#128,*+0
+	//__asm BRset  0xcc,#128,*-4
+    Ser_Printf( "CData = %x\n", CData );
+	CData--;
+	__asm DECW CData;
+	//__asm DEY;
+	//__asm DEY;
+	Ser_Printf( "CData = %x\n", CData );
 	while(1){
 	 a++;
 	 if( b==0 ){
@@ -120,39 +136,56 @@ int test_func(int a, int b)
 	__asm nop;
 
 	__asm nop;
-	c=a;
+	c = a;
 	__asm nop;
 	return c;
 
 }
-#pragma CODE_SEG DEFAULT
+//#pragma CODE_SEG DEFAULT
+
+
+//extern  void Local(void);
 
 void main(void) 
 {       
     int ret;    
+	#ifdef TEST_I2C
+	unsigned char receivedata = 0;
+	#endif
+	
     DisableInterrupts; 
     INIT_PLL();
     INIT_SCI();
-    //INIT_IIC();
-    //INIT_SPI();
-    //INIT_FM25040A();
-  
+	#ifdef TEST_I2C
+    INIT_IIC();
+	#endif
+
+	#ifdef TEST_SPI
+    INIT_SPI();
+    INIT_FM25040A();
+    #endif
+
+	
     LEDCPU_dir = 1;
     LEDCPU=1;
     LED_dir=0xff;
     EnableInterrupts; 
     __asm nop;
+
+
+	
     
     for( ; ; ){
-         
          delay_i2c();
-		 ret = test_func(11,3);
-         Ser_Printf( "testfunc = %d\n", ret );
+         //Ser_Printf( "hello in c\n" );
+         //ASM_func_0();
+         ASM_func_1();
+		 //ret = test_func(11,3);
+         //Ser_Printf( "testfunc = %d\n", ret );
     }
      
-    #if 0
+    #ifdef TEST_I2C
     for( ; ; ){
-		 //test_spi();
          delay_i2c();
          receivedata = IIC_receive();     
 		 //读取并口数据
@@ -161,6 +194,16 @@ void main(void)
 		 //显示读取到的数据
     } 
     #endif
+                           	
+    #ifdef TEST_SPI                 
+	test_spi();
+    #endif
+
+	#ifdef TEST_DFLASH                 
+	dflash_main();
+    #endif
+
+	
 }
 
 

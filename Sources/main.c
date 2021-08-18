@@ -26,7 +26,7 @@ E-mail: 2008f.d@163.com
 
 extern void INIT_SCI(void);
 extern void Ser_Printf (const char *format, ...);
-
+xxxxfuck git
 
 #define TEST_I2C   1
 #undef TEST_I2C 

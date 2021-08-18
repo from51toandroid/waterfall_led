@@ -28,6 +28,8 @@ extern void INIT_SCI(void);
 extern void Ser_Printf (const char *format, ...);
 xxxxfuck git
 
+the second modify test!!!hahahahahah
+
 #define TEST_I2C   1
 #undef TEST_I2C 
 #define TEST_SPI   1
